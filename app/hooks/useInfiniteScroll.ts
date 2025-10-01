@@ -45,7 +45,7 @@ export function useInfiniteScroll({
   const fetcher = useFetcher<InfiniteScrollLoaderData>();
 
   // 状態管理
-  const [allArticles, setAllArticles] = useState<Article[]>(initialData.articles);
+  const [articles, setArticles] = useState<Article[]>(initialData.articles);
   const [page, setPage] = useState(initialData.currentPage);
   const [hasMore, setHasMore] = useState(initialData.hasMore);
   const [isLoading, setIsLoading] = useState(false);
@@ -64,7 +64,7 @@ export function useInfiniteScroll({
       setIsLoading(true);
       fetcher.load(`/api/articles?page=${nextPage}`);
     }
-  }, [hasMore, fetcher, page, isLoading]);
+  }, [hasMore, page, fetcher, isLoading]);
 
   // Intersection Observer がトリガーされたら読み込み
   useEffect(() => {
@@ -82,9 +82,10 @@ export function useInfiniteScroll({
 
   // fetcherからデータが返ってきたら統合
   useEffect(() => {
-    if (fetcher.data?.articles) {
-      setAllArticles(prev => mergeArticles(prev, fetcher.data!.articles));
-      setHasMore(fetcher.data.hasMore);
+    const data = fetcher.data;
+    if (data?.articles) {
+      setArticles(prev => [...prev, ...data.articles]);
+      setHasMore(data.hasMore);
       setTimeout(() => {
         setIsLoading(false);
       }, 500);
@@ -99,15 +100,16 @@ export function useInfiniteScroll({
       setIsLoading(true);
       fetcher.load(`/api/articles?page=1&refresh=true`);
 
-      // リフレッシュ後はページをリセット
+      // リフレッシュ後は状態をリセット
+      setArticles([]);
       setPage(1);
-      setAllArticles([]);
+      setHasMore(true);
     }
   }, [fetcher, isLoading]);
 
   // リセット機能
   const reset = useCallback(() => {
-    setAllArticles(initialData.articles);
+    setArticles(initialData.articles);
     setPage(initialData.currentPage);
     setHasMore(initialData.hasMore);
   }, [initialData]);
@@ -116,7 +118,7 @@ export function useInfiniteScroll({
   // メモ化された戻り値
   return useMemo(() => ({
     // データ
-    allArticles,
+    allArticles: articles,
     hasMore,
     totalCount: initialData.totalCount,
     currentPage: page,
@@ -133,10 +135,10 @@ export function useInfiniteScroll({
     refresh,
     reset,
   }), [
-    allArticles,
+    articles,
     hasMore,
-    initialData.totalCount,
     page,
+    initialData.totalCount,
     isLoading,
     observerRef,
     inView,
