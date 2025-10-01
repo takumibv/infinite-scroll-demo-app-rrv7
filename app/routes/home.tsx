@@ -30,11 +30,16 @@ export default function Home() {
         }}
       >
         <Typography variant="h4" component="h1" sx={{ mb: 2 }}>
-          Material UI - Next.js App Router example in TypeScript
+          React Router v7 - Infinite Scroll Demo
         </Typography>
-        <Link to="/about" color="secondary" component={ReactRouterLink}>
-          Go to the about page
-        </Link>
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, alignItems: 'center' }}>
+          <Link to="/items" color="primary" component={ReactRouterLink}>
+            🚀 Go to Infinite Scroll Demo
+          </Link>
+          <Link to="/about" color="secondary" component={ReactRouterLink}>
+            Go to the about page
+          </Link>
+        </Box>
         <ProTip />
         <Copyright />
       </Box>
