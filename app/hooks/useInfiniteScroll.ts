@@ -68,7 +68,7 @@ export function useInfiniteScroll({
     if (hasMore && fetcher.state === 'idle') {
       const nextPage = page + 1;
       setPage(nextPage);
-      fetcher.load(`/items?page=${nextPage}`);
+      fetcher.load(`/?page=${nextPage}`);
     }
   }, [hasMore, fetcher, page]);
 

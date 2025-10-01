@@ -1,41 +1,128 @@
-# Material UI - React Router example in TypeScript
+# React Router v7 無限スクロールデモ
 
-## How to use
+React Router v7を使用した無限スクロールとバーチャルリストの実装デモアプリケーションです。
 
-Download the example [or clone the repo](https://github.com/mui/material-ui):
+## 機能
 
-<!-- #target-branch-reference -->
+- 📜 **無限スクロール**: Intersection Observer APIを使用した自動ローディング
+- ⚡ **バーチャルリスト**: @tanstack/react-virtualによる効率的なレンダリング
+- 🔄 **手動リフレッシュ**: 新しいアイテムを動的に追加
+- ⏰ **自動リフレッシュ**: 30秒ごとの自動更新（トグル可能）
+- 🎯 **型安全**: TypeScriptによる完全な型定義
+- 🚀 **SSR対応**: React Router v7のサーバーサイドレンダリング
+
+## 技術スタック
+
+- **React Router v7**: フルスタックWebフレームワーク
+- **React 18**: UI構築ライブラリ
+- **TypeScript**: 型安全な開発
+- **Material-UI (MUI)**: UIコンポーネント
+- **@tanstack/react-virtual**: バーチャルスクロール
+- **react-intersection-observer**: スクロール検知
+- **Vite**: 高速な開発サーバーとビルドツール
+
+## セットアップ
+
+### 必要要件
+
+- Node.js 18以上
+- npm または pnpm
+
+### インストール
 
 ```bash
-curl https://codeload.github.com/mui/material-ui/tar.gz/master | tar -xz --strip=2 material-ui-master/examples/material-ui-react-router-ts
-cd material-ui-react-router-ts
-```
-
-Install it and run:
-
-```bash
+# 依存関係のインストール
 npm install
+
+# 開発サーバーの起動
 npm run dev
 ```
 
-or:
+アプリケーションは http://localhost:5173 でアクセスできます。
 
-<!-- #target-branch-reference -->
+## スクリプト
 
-[![Edit on CodeSandbox](https://codesandbox.io/static/img/play-codesandbox.svg)](https://codesandbox.io/p/sandbox/github/mui/material-ui/tree/master/examples/material-ui-react-router-ts)
+```bash
+npm run dev       # 開発サーバーを起動
+npm run build     # プロダクションビルド
+npm run start     # プロダクションサーバーを起動
+npm run typecheck # TypeScript型チェック
+```
 
-[![Edit on StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/github/mui/material-ui/tree/master/examples/material-ui-react-router-ts)
+## プロジェクト構成
 
-## The idea behind the example
+```
+app/
+├── routes/
+│   └── home.tsx          # 無限スクロールページ
+├── hooks/
+│   └── useInfiniteScroll.ts  # カスタムフック
+├── components/
+│   └── ItemCard.tsx      # アイテムカードコンポーネント
+├── utils/
+│   └── mockApi.ts        # モックAPI
+└── root.tsx              # ルートレイアウト
+```
 
-<!-- #host-reference -->
+## 主な機能の説明
 
-This example demonstrates how you can use Material UI with [React Router](https://reactrouter.com/) in [TypeScript](https://github.com/Microsoft/TypeScript).
-It includes `@mui/material` and its peer dependencies, including [Emotion](https://emotion.sh/docs/introduction), the default style engine in Material UI.
+### 無限スクロール
 
-## What's next?
+- ページ下部に到達すると自動的に次のデータを取得
+- Intersection Observer APIを使用した効率的な検知
+- ローディング状態とエラーハンドリング
 
-<!-- #host-reference -->
+### 手動リフレッシュ
 
-You now have a working example project.
-You can head back to the documentation and continue by browsing the [templates](https://mui.com/material-ui/getting-started/templates/) section.
+- 「Manual Refresh」ボタンで新しいアイテムを追加
+- 重複排除ロジックによる安全なデータ統合
+- URLパラメータを使用したリフレッシュ状態の管理
+
+### 自動リフレッシュ
+
+- 30秒ごとに自動的にデータを更新（設定可能）
+- トグルボタンでON/OFF切り替え可能
+- React Routerのrevalidatorを使用
+
+### カスタムフック (useInfiniteScroll)
+
+データ取得ロジックをカプセル化したカスタムフック：
+
+```typescript
+const {
+  allItems,
+  hasMore,
+  totalCount,
+  currentPage,
+  isLoading,
+  isRefreshing,
+  autoRefresh,
+  observerRef,
+  inView,
+  refresh,
+  reset,
+  toggleAutoRefresh,
+} = useInfiniteScroll({
+  initialData,
+  rootMargin: '100px',
+  autoRefreshInterval: 30000, // オプション
+});
+```
+
+## 開発ガイド
+
+### 型安全性
+
+- `any`型の使用は禁止
+- 適切な型定義または`unknown`型を使用
+- 型ガードによる型の絞り込み
+
+### React Router v7のパターン
+
+- `loader`関数による初期データ取得
+- `useFetcher`によるクライアントサイドデータ更新
+- 型安全なルーティング
+
+## ライセンス
+
+MIT

@@ -1,48 +1,71 @@
-import * as React from 'react';
-import Container from '@mui/material/Container';
-import Typography from '@mui/material/Typography';
-import Box from '@mui/material/Box';
-import Link from '@mui/material/Link';
-import { Link as ReactRouterLink } from 'react-router';
-import ProTip from '~/components/ProTip';
-import Copyright from '~/components/Copyright';
+import { type LoaderFunctionArgs, useLoaderData } from "react-router";
+import {
+  Box,
+  Button,
+  Typography,
+  CircularProgress,
+  List,
+  ListItem,
+  ListItemText,
+  Container,
+} from "@mui/material";
+import { fetchItems, addNewItems } from "~/utils/mockApi";
+import { useInfiniteScroll } from "~/hooks/useInfiniteScroll";
 
-export function meta() {
-  return [
-    { title: 'Material UI - React Router example in TypeScript' },
-    {
-      name: 'description',
-      content: 'Welcome to Material UI - React Router example in TypeScript!',
-    },
-  ];
+export async function loader({ request }: LoaderFunctionArgs) {
+  const url = new URL(request.url);
+  const page = parseInt(url.searchParams.get("page") || "1");
+  const isRefresh = url.searchParams.get("refresh") === "true";
+
+  if (isRefresh && page === 1) addNewItems(20);
+
+  const data = await fetchItems({ page, limit: 20 });
+  return {
+    items: data.items,
+    hasMore: data.hasMore,
+    currentPage: page,
+    totalCount: data.totalCount,
+  };
 }
 
 export default function Home() {
+  const data = useLoaderData<typeof loader>();
+  const { allItems, hasMore, isLoading, observerRef, refresh, reset } = useInfiniteScroll({
+    initialData: data,
+  });
+
   return (
-    <Container maxWidth="lg">
-      <Box
-        sx={{
-          my: 4,
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'center',
-          alignItems: 'center',
-        }}
-      >
-        <Typography variant="h4" component="h1" sx={{ mb: 2 }}>
-          React Router v7 - Infinite Scroll Demo
-        </Typography>
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, alignItems: 'center' }}>
-          <Link to="/items" color="primary" component={ReactRouterLink}>
-            🚀 Go to Infinite Scroll Demo
-          </Link>
-          <Link to="/about" color="secondary" component={ReactRouterLink}>
-            Go to the about page
-          </Link>
+    <Container sx={{ p: 4 }}>
+      <Typography variant="h4" component="h1">
+        Items ({allItems.length})
+      </Typography>
+      <Button onClick={refresh}>Refresh</Button>
+      <Button onClick={reset}>Reset</Button>
+
+      <List sx={{ mt: 2.5 }}>
+        {allItems.map((item) => (
+          <ListItem key={item.id}>
+            <ListItemText>
+              <Typography variant="subtitle1" component="strong">
+                {item.title}
+              </Typography>
+              <Typography variant="body2" sx={{ mt: 0.5, color: "text.secondary" }}>
+                {item.description}
+              </Typography>
+            </ListItemText>
+          </ListItem>
+        ))}
+      </List>
+
+      {hasMore && (
+        <Box ref={observerRef} sx={{ p: 2.5, textAlign: "center" }}>
+          {isLoading ? <CircularProgress size={24} /> : "Scroll for more"}
         </Box>
-        <ProTip />
-        <Copyright />
-      </Box>
+      )}
+
+      {!hasMore && (
+        <Box sx={{ p: 2.5, textAlign: "center", color: "text.secondary" }}>End of list</Box>
+      )}
     </Container>
   );
 }
