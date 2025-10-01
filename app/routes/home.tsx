@@ -1,4 +1,4 @@
-import { type LoaderFunctionArgs, useLoaderData } from "react-router";
+import { useLoaderData } from "react-router";
 import {
   Box,
   Button,
@@ -9,21 +9,16 @@ import {
   ListItemText,
   Container,
 } from "@mui/material";
-import { fetchItems, addNewItems } from "~/utils/mockApi";
+import { fetchItems } from "~/utils/mockApi";
 import { useInfiniteScroll } from "~/hooks/useInfiniteScroll";
 
-export async function loader({ request }: LoaderFunctionArgs) {
-  const url = new URL(request.url);
-  const page = parseInt(url.searchParams.get("page") || "1");
-  const isRefresh = url.searchParams.get("refresh") === "true";
-
-  if (isRefresh && page === 1) addNewItems(20);
-
-  const data = await fetchItems({ page, limit: 20 });
+export async function loader() {
+  // 初回ロード時は最初のページのデータのみ取得
+  const data = await fetchItems({ page: 1, limit: 20 });
   return {
     items: data.items,
     hasMore: data.hasMore,
-    currentPage: page,
+    currentPage: 1,
     totalCount: data.totalCount,
   };
 }

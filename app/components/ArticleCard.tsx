@@ -1,11 +1,11 @@
 import { Card, CardContent, Typography, Box } from '@mui/material';
-import type { Item } from '~/utils/mockApi';
+import type { Article } from '~/types';
 
-interface ItemCardProps {
-  item: Item;
+interface ArticleCardProps {
+  article: Article;
 }
 
-export default function ItemCard({ item }: ItemCardProps) {
+export default function ArticleCard({ article }: ArticleCardProps) {
   return (
     <Card
       sx={{
@@ -29,7 +29,7 @@ export default function ItemCard({ item }: ItemCardProps) {
             color: 'primary.main',
           }}
         >
-          {item.title}
+          {article.title}
         </Typography>
 
         <Typography
@@ -37,7 +37,7 @@ export default function ItemCard({ item }: ItemCardProps) {
           color="text.secondary"
           paragraph
         >
-          {item.description}
+          {article.description}
         </Typography>
 
         <Box sx={{ mt: 'auto', pt: 2 }}>
@@ -46,13 +46,13 @@ export default function ItemCard({ item }: ItemCardProps) {
             color="text.disabled"
             sx={{ display: 'block' }}
           >
-            ID: {item.id}
+            ID: {article.id}
           </Typography>
           <Typography
             variant="caption"
             color="text.disabled"
           >
-            {new Date(item.createdAt).toLocaleDateString()}
+            {new Date(article.createdAt).toLocaleDateString()}
           </Typography>
         </Box>
       </CardContent>
