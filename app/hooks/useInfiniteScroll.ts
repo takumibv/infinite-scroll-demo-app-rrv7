@@ -5,7 +5,7 @@ import type { Article } from '~/types';
 
 // ローダーから返されるデータの型
 export interface InfiniteScrollLoaderData {
-  items: Article[];
+  articles: Article[];
   hasMore: boolean;
   currentPage: number;
   totalCount: number;
@@ -20,7 +20,7 @@ export interface UseInfiniteScrollOptions {
 // カスタムフックの戻り値
 export interface UseInfiniteScrollReturn {
   // データ
-  allItems: Article[];
+  allArticles: Article[];
   hasMore: boolean;
   totalCount: number;
   currentPage: number;
@@ -45,7 +45,7 @@ export function useInfiniteScroll({
   const fetcher = useFetcher<InfiniteScrollLoaderData>();
 
   // 状態管理
-  const [allItems, setAllItems] = useState<Article[]>(initialData.items);
+  const [allArticles, setAllArticles] = useState<Article[]>(initialData.articles);
   const [page, setPage] = useState(initialData.currentPage);
   const [hasMore, setHasMore] = useState(initialData.hasMore);
   const [isLoading, setIsLoading] = useState(false);
@@ -73,23 +73,23 @@ export function useInfiniteScroll({
     }
   }, [inView, hasMore, fetcher.state, loadMore, isLoading]);
 
-  // 重複を排除してアイテムを追加するヘルパー関数
-  const mergeItems = useCallback((existingItems: Article[], newItems: Article[], prepend = false) => {
-    const existingIds = new Set(existingItems.map(item => item.id));
-    const uniqueNewItems = newItems.filter(item => !existingIds.has(item.id));
-    return prepend ? [...uniqueNewItems, ...existingItems] : [...existingItems, ...uniqueNewItems];
+  // 重複を排除して記事を追加するヘルパー関数
+  const mergeArticles = useCallback((existingArticles: Article[], newArticles: Article[], prepend = false) => {
+    const existingIds = new Set(existingArticles.map(article => article.id));
+    const uniqueNewArticles = newArticles.filter(article => !existingIds.has(article.id));
+    return prepend ? [...uniqueNewArticles, ...existingArticles] : [...existingArticles, ...uniqueNewArticles];
   }, []);
 
   // fetcherからデータが返ってきたら統合
   useEffect(() => {
-    if (fetcher.data?.items) {
-      setAllItems(prev => mergeItems(prev, fetcher.data!.items));
+    if (fetcher.data?.articles) {
+      setAllArticles(prev => mergeArticles(prev, fetcher.data!.articles));
       setHasMore(fetcher.data.hasMore);
       setTimeout(() => {
         setIsLoading(false);
       }, 500);
     }
-  }, [fetcher.data, mergeItems]);
+  }, [fetcher.data, mergeArticles]);
 
 
   // 手動リフレッシュ
@@ -101,13 +101,13 @@ export function useInfiniteScroll({
 
       // リフレッシュ後はページをリセット
       setPage(1);
-      setAllItems([]);
+      setAllArticles([]);
     }
   }, [fetcher, isLoading]);
 
   // リセット機能
   const reset = useCallback(() => {
-    setAllItems(initialData.items);
+    setAllArticles(initialData.articles);
     setPage(initialData.currentPage);
     setHasMore(initialData.hasMore);
   }, [initialData]);
@@ -116,7 +116,7 @@ export function useInfiniteScroll({
   // メモ化された戻り値
   return useMemo(() => ({
     // データ
-    allItems,
+    allArticles,
     hasMore,
     totalCount: initialData.totalCount,
     currentPage: page,
@@ -133,7 +133,7 @@ export function useInfiniteScroll({
     refresh,
     reset,
   }), [
-    allItems,
+    allArticles,
     hasMore,
     initialData.totalCount,
     page,

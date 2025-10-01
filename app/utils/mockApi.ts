@@ -1,8 +1,8 @@
 // モックAPIユーティリティ
 import type { Article } from '~/types';
 
-export interface FetchItemsResponse {
-  items: Article[];
+export interface FetchArticlesResponse {
+  articles: Article[];
   hasMore: boolean;
   totalCount: number;
 }
@@ -19,41 +19,41 @@ const generateItem = (id: number): Article => ({
   createdAt: new Date(Date.now() - Math.random() * 10000000000).toISOString(),
 });
 
-// 全アイテムを生成（メモリに保持、動的に追加可能）
-let allItems: Article[] = Array.from({ length: INITIAL_ITEMS }, (_, i) => generateItem(i + 1));
+// 全記事を生成（メモリに保持、動的に追加可能）
+let allArticles: Article[] = Array.from({ length: INITIAL_ITEMS }, (_, i) => generateItem(i + 1));
 
-// 新しいアイテムを追加する関数
-export function addNewItems(count: number = 20): void {
-  const newItems: Article[] = [];
+// 新しい記事を追加する関数
+export function addNewArticles(count: number = 20): void {
+  const newArticles: Article[] = [];
   for (let i = 0; i < count; i++) {
     currentMaxId++;
-    // 新しいアイテムを先頭に追加（最新のアイテムが上に来るように）
-    newItems.push(generateItem(currentMaxId));
+    // 新しい記事を先頭に追加（最新の記事が上に来るように）
+    newArticles.push(generateItem(currentMaxId));
   }
-  // 配列の先頭に新しいアイテムを追加
-  allItems = [...newItems, ...allItems];
+  // 配列の先頭に新しい記事を追加
+  allArticles = [...newArticles, ...allArticles];
 }
 
 // APIレスポンスをシミュレート
-export async function fetchItems({
+export async function fetchArticles({
   page = 1,
   limit = ITEMS_PER_PAGE
 }: {
   page?: number;
   limit?: number;
-}): Promise<FetchItemsResponse> {
+}): Promise<FetchArticlesResponse> {
   // ネットワーク遅延をシミュレート
   await new Promise(resolve => setTimeout(resolve, 500));
 
   const startIndex = (page - 1) * limit;
   const endIndex = startIndex + limit;
 
-  const items = allItems.slice(startIndex, endIndex);
-  const hasMore = endIndex < allItems.length;
+  const articles = allArticles.slice(startIndex, endIndex);
+  const hasMore = endIndex < allArticles.length;
 
   return {
-    items,
+    articles,
     hasMore,
-    totalCount: allItems.length,
+    totalCount: allArticles.length,
   };
 }

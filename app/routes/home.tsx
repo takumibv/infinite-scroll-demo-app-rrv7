@@ -1,4 +1,3 @@
-import { useLoaderData } from "react-router";
 import {
   Box,
   Button,
@@ -9,43 +8,43 @@ import {
   ListItemText,
   Container,
 } from "@mui/material";
-import { fetchItems } from "~/utils/mockApi";
+import { fetchArticles } from "~/utils/mockApi";
 import { useInfiniteScroll } from "~/hooks/useInfiniteScroll";
+import type { Route } from "./+types/home";
 
 export async function loader() {
   // 初回ロード時は最初のページのデータのみ取得
-  const data = await fetchItems({ page: 1, limit: 20 });
+  const data = await fetchArticles({ page: 1, limit: 20 });
   return {
-    items: data.items,
+    articles: data.articles,
     hasMore: data.hasMore,
     currentPage: 1,
     totalCount: data.totalCount,
   };
 }
 
-export default function Home() {
-  const data = useLoaderData<typeof loader>();
-  const { allItems, hasMore, isLoading, observerRef, refresh, reset } = useInfiniteScroll({
-    initialData: data,
+export default function Home({ loaderData }: Route.ComponentProps) {
+  const { allArticles, hasMore, isLoading, observerRef, refresh, reset } = useInfiniteScroll({
+    initialData: loaderData,
   });
 
   return (
     <Container sx={{ p: 4 }}>
       <Typography variant="h4" component="h1">
-        Items ({allItems.length})
+        Articles ({allArticles.length})
       </Typography>
       <Button onClick={refresh}>Refresh</Button>
       <Button onClick={reset}>Reset</Button>
 
       <List sx={{ mt: 2.5 }}>
-        {allItems.map((item) => (
-          <ListItem key={item.id}>
+        {allArticles.map((article) => (
+          <ListItem key={article.id}>
             <ListItemText>
               <Typography variant="subtitle1" component="strong">
-                {item.title}
+                {article.title}
               </Typography>
               <Typography variant="body2" sx={{ mt: 0.5, color: "text.secondary" }}>
-                {item.description}
+                {article.description}
               </Typography>
             </ListItemText>
           </ListItem>

@@ -1,5 +1,5 @@
 import { type LoaderFunctionArgs } from "react-router";
-import { fetchItems, addNewItems } from "~/utils/mockApi";
+import { fetchArticles, addNewArticles } from "~/utils/mockApi";
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const url = new URL(request.url);
@@ -7,15 +7,15 @@ export async function loader({ request }: LoaderFunctionArgs) {
   const limit = parseInt(url.searchParams.get("limit") || "20");
   const isRefresh = url.searchParams.get("refresh") === "true";
 
-  // リフレッシュ時は新しいアイテムを追加
+  // リフレッシュ時は新しい記事を追加
   if (isRefresh && page === 1) {
-    addNewItems(20);
+    addNewArticles(20);
   }
 
-  const data = await fetchItems({ page, limit });
+  const data = await fetchArticles({ page, limit });
 
   return {
-    items: data.items,
+    articles: data.articles,
     hasMore: data.hasMore,
     currentPage: page,
     totalCount: data.totalCount,
