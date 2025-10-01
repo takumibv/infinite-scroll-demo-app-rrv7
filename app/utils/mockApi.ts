@@ -12,8 +12,9 @@ export interface FetchItemsResponse {
   totalCount: number;
 }
 
-const TOTAL_ITEMS = 200;
+const INITIAL_ITEMS = 200;
 const ITEMS_PER_PAGE = 20;
+let currentMaxId = INITIAL_ITEMS;
 
 // ダミーデータを生成
 const generateItem = (id: number): Item => ({
@@ -23,8 +24,20 @@ const generateItem = (id: number): Item => ({
   createdAt: new Date(Date.now() - Math.random() * 10000000000).toISOString(),
 });
 
-// 全アイテムを生成（メモリに保持）
-const allItems: Item[] = Array.from({ length: TOTAL_ITEMS }, (_, i) => generateItem(i + 1));
+// 全アイテムを生成（メモリに保持、動的に追加可能）
+let allItems: Item[] = Array.from({ length: INITIAL_ITEMS }, (_, i) => generateItem(i + 1));
+
+// 新しいアイテムを追加する関数
+export function addNewItems(count: number = 20): void {
+  const newItems: Item[] = [];
+  for (let i = 0; i < count; i++) {
+    currentMaxId++;
+    // 新しいアイテムを先頭に追加（最新のアイテムが上に来るように）
+    newItems.push(generateItem(currentMaxId));
+  }
+  // 配列の先頭に新しいアイテムを追加
+  allItems = [...newItems, ...allItems];
+}
 
 // APIレスポンスをシミュレート
 export async function fetchItems({

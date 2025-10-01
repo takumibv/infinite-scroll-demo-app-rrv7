@@ -1,6 +1,4 @@
-import { type LoaderFunctionArgs, useLoaderData, useFetcher, useRevalidator } from 'react-router';
-import { useEffect, useRef, useState, useCallback } from 'react';
-import { useInView } from 'react-intersection-observer';
+import { type LoaderFunctionArgs, useLoaderData } from 'react-router';
 import {
   Container,
   Typography,
@@ -11,8 +9,14 @@ import {
   Button,
   Alert,
 } from '@mui/material';
-import { fetchItems, type Item } from '~/utils/mockApi';
+import { fetchItems, addNewItems } from '~/utils/mockApi';
 import ItemCard from '~/components/ItemCard';
+import { useInfiniteScroll, type InfiniteScrollLoaderData } from '~/hooks/useInfiniteScroll';
+
+function sleep(ms: number) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 
 const ITEMS_PER_PAGE = 20;
 
@@ -20,6 +24,14 @@ const ITEMS_PER_PAGE = 20;
 export async function loader({ request }: LoaderFunctionArgs) {
   const url = new URL(request.url);
   const page = parseInt(url.searchParams.get('page') || '1');
+  const isRefresh = url.searchParams.get('refresh') === 'true';
+
+  // リフレッシュの場合、新しいアイテムを追加
+  if (isRefresh && page === 1) {
+    addNewItems(20); // 20個の新しいアイテムを追加
+  }
+
+  await sleep(1000);
 
   const data = await fetchItems({ page, limit: ITEMS_PER_PAGE });
 
@@ -28,7 +40,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
     hasMore: data.hasMore,
     currentPage: page,
     totalCount: data.totalCount,
-  };
+  } satisfies InfiniteScrollLoaderData;
 }
 
 // メタデータ
@@ -44,91 +56,25 @@ export function meta() {
 
 export default function ItemsPage() {
   const initialData = useLoaderData<typeof loader>();
-  const fetcher = useFetcher<typeof loader>();
-  const revalidator = useRevalidator();
 
-  // 状態管理
-  const [allItems, setAllItems] = useState<Item[]>(initialData.items);
-  const [page, setPage] = useState(initialData.currentPage);
-  const [hasMore, setHasMore] = useState(initialData.hasMore);
-  const [autoRefresh, setAutoRefresh] = useState(false);
-
-  // Intersection Observer のセットアップ
-  const { ref: observerRef, inView } = useInView({
-    threshold: 0,
+  // カスタムフックを使用してデータ取得層を管理
+  const {
+    allItems,
+    hasMore,
+    totalCount,
+    currentPage,
+    isLoading,
+    isRefreshing,
+    autoRefresh,
+    observerRef,
+    inView,
+    refresh,
+    reset,
+    toggleAutoRefresh,
+  } = useInfiniteScroll({
+    initialData,
     rootMargin: '100px',
   });
-
-  // 新しいページのデータ取得
-  const loadMore = useCallback(() => {
-    if (hasMore && fetcher.state === 'idle') {
-      const nextPage = page + 1;
-      setPage(nextPage);
-      fetcher.load(`/items?page=${nextPage}`);
-    }
-  }, [hasMore, fetcher, page]);
-
-  // Intersection Observer がトリガーされたら読み込み
-  useEffect(() => {
-    if (inView && hasMore && fetcher.state === 'idle') {
-      loadMore();
-    }
-  }, [inView, hasMore, fetcher.state, loadMore]);
-
-  // fetcherからデータが返ってきたら統合
-  useEffect(() => {
-    if (fetcher.data?.items) {
-      setAllItems(prev => [...prev, ...fetcher.data!.items]);
-      setHasMore(fetcher.data.hasMore);
-    }
-  }, [fetcher.data]);
-
-  // 自動更新機能（useRevalidatorの例）
-  useEffect(() => {
-    if (!autoRefresh) return;
-
-    const interval = setInterval(() => {
-      if (revalidator.state === 'idle') {
-        revalidator.revalidate();
-      }
-    }, 30000); // 30秒ごとに更新
-
-    return () => clearInterval(interval);
-  }, [autoRefresh, revalidator]);
-
-  // 再検証されたデータで先頭のアイテムを更新
-  useEffect(() => {
-    if (revalidator.state === 'idle' && initialData.items) {
-      // 新しいアイテムがあるかチェック
-      const newIds = new Set(initialData.items.map(i => i.id));
-      const hasNewItems = initialData.items.some(
-        item => !allItems.find(existing => existing.id === item.id)
-      );
-
-      if (hasNewItems) {
-        // 重複を避けながら新しいアイテムを追加
-        setAllItems(prev => {
-          const existingIds = new Set(prev.map(i => i.id));
-          const newItems = initialData.items.filter(i => !existingIds.has(i.id));
-          return [...newItems, ...prev];
-        });
-      }
-    }
-  }, [revalidator.state, initialData.items]);
-
-  // 手動リフレッシュ
-  const handleManualRefresh = () => {
-    if (revalidator.state === 'idle') {
-      revalidator.revalidate();
-    }
-  };
-
-  // リセット機能
-  const handleReset = () => {
-    setAllItems(initialData.items);
-    setPage(initialData.currentPage);
-    setHasMore(initialData.hasMore);
-  };
 
   return (
     <Container maxWidth="lg">
@@ -145,19 +91,19 @@ export default function ItemsPage() {
           {/* ステータス表示 */}
           <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mb: 2 }}>
             <Chip
-              label={`Total: ${allItems.length} / ${initialData.totalCount}`}
+              label={`Total: ${allItems.length} / ${totalCount}`}
               color="primary"
               variant="outlined"
             />
             <Chip
-              label={`Page: ${page}`}
+              label={`Page: ${currentPage}`}
               color="secondary"
               variant="outlined"
             />
-            {fetcher.state === 'loading' && (
+            {isLoading && (
               <Chip label="Loading..." color="info" />
             )}
-            {revalidator.state === 'loading' && (
+            {isRefreshing && (
               <Chip label="Refreshing..." color="warning" />
             )}
             {!hasMore && (
@@ -170,15 +116,15 @@ export default function ItemsPage() {
             <Button
               variant="outlined"
               size="small"
-              onClick={handleManualRefresh}
-              disabled={revalidator.state === 'loading'}
+              onClick={refresh}
+              disabled={isRefreshing}
             >
               Manual Refresh
             </Button>
             <Button
               variant="outlined"
               size="small"
-              onClick={() => setAutoRefresh(!autoRefresh)}
+              onClick={toggleAutoRefresh}
               color={autoRefresh ? 'success' : 'inherit'}
             >
               Auto Refresh: {autoRefresh ? 'ON' : 'OFF'}
@@ -186,7 +132,7 @@ export default function ItemsPage() {
             <Button
               variant="outlined"
               size="small"
-              onClick={handleReset}
+              onClick={reset}
               color="error"
             >
               Reset
@@ -211,7 +157,7 @@ export default function ItemsPage() {
         </Box>
 
         {/* ローディングインジケーター */}
-        {fetcher.state === 'loading' && (
+        {isLoading && (
           <Box sx={{ mt: 4 }}>
             <LinearProgress />
             <Typography
@@ -237,7 +183,7 @@ export default function ItemsPage() {
               justifyContent: 'center',
             }}
           >
-            {!fetcher.state && inView && (
+            {!isLoading && inView && (
               <Typography variant="caption" color="text.disabled">
                 Scroll to load more
               </Typography>
@@ -263,7 +209,7 @@ export default function ItemsPage() {
               🎉 All items loaded!
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              You've reached the end of the list ({initialData.totalCount} items)
+              You've reached the end of the list ({totalCount} items)
             </Typography>
           </Paper>
         )}
