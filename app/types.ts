@@ -4,3 +4,9 @@ export interface Article {
   description: string;
   createdAt: string;
 }
+
+export interface FetchArticlesResponse {
+  articles: Article[];
+  hasMore: boolean;
+  totalCount: number;
+}

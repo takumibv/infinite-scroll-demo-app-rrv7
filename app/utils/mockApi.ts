@@ -1,11 +1,5 @@
 // モックAPIユーティリティ
-import type { Article } from '~/types';
-
-export interface FetchArticlesResponse {
-  articles: Article[];
-  hasMore: boolean;
-  totalCount: number;
-}
+import type { Article, FetchArticlesResponse } from "~/types";
 
 const INITIAL_ITEMS = 200;
 const ITEMS_PER_PAGE = 20;
@@ -37,13 +31,13 @@ export function addNewArticles(count: number = 20): void {
 // APIレスポンスをシミュレート
 export async function fetchArticles({
   page = 1,
-  limit = ITEMS_PER_PAGE
+  limit = ITEMS_PER_PAGE,
 }: {
   page?: number;
   limit?: number;
 }): Promise<FetchArticlesResponse> {
   // ネットワーク遅延をシミュレート
-  await new Promise(resolve => setTimeout(resolve, 500));
+  await new Promise((resolve) => setTimeout(resolve, 500));
 
   const startIndex = (page - 1) * limit;
   const endIndex = startIndex + limit;
